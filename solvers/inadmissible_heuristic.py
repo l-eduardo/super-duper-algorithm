@@ -1,5 +1,5 @@
 from board import Board
-from utils import astar
+from .utils import astar
 
 def manhattan_distance(board: Board) -> int:
     arr = board.get_board()
@@ -17,14 +17,6 @@ def manhattan_distance(board: Board) -> int:
 def inflated_manhattan(board: Board, factor: float = 1.5) -> float:
     return manhattan_distance(board) * factor
 
-def algoritmo2(start_board: Board):
+def inadmissible_heuristic(start_board: Board):
     return astar(start_board, lambda b: inflated_manhattan(b, factor=1.5),
-                 save_path="alg2_inadmissivel.json")
-
-if __name__ == "__main__":
-    initial = [8, 7, 6,
-               5, 4, 3,
-               2, 1, -1]
-    b = Board(3, initial)
-    result = algoritmo2(b)
-    print("Resultado Algoritmo 2 (não admissível):", result)
+                 save_path="inadmissible_heuristic.json")
