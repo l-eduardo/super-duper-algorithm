@@ -1,0 +1,12 @@
+{
+  "result": {
+    "path": [
+      "Down",
+      "Right"
+    ],
+    "path_length": 2,
+    "nodes_visited": 3,
+    "time_seconds": 0.00010590800229692832,
+    "max_frontier_size": 5
+  }
+}
