@@ -25,6 +25,16 @@ class Board:
         
         self.board = [i for i in range(1, game_size * game_size)] + [-1]
 
+    def __eq__(self, value):
+        if not isinstance(value, Board):
+            return False
+        
+        for i in range(len(self.board)):
+            if self.board[i] != value.board[i]:
+                return False
+
+        return True
+
     @classmethod
     def parse(cls, board: list[int]) -> Board:
         board = Board(board=board, game_size=sqrt(len(board)))
@@ -40,7 +50,7 @@ class Board:
     def get_board(self) -> List[int]:
         return self.board
     
-    def possible_next_states(self) -> List[Board]:
+    def possible_next_states(self) -> List[(Board, Direction)]:
         next_states = []
 
         for move in self.possible_moves():
@@ -55,7 +65,7 @@ class Board:
             elif move == Direction.Down:
                 new_board.move_down()
             
-            next_states.append(new_board)
+            next_states.append((new_board, move))
 
         return next_states
     

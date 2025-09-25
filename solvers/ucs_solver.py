@@ -85,70 +85,113 @@ class Reporter:
             self.log("Sequence of moves to solve the puzzle:")
             self.log(" -> ".join(moves if moves else ["Already solved!"]))
             
-            self.log("\n=== Detailed Solution Path ===")
-            for step in self.solution_path:
-                if step['action']:
-                    self.log(f"\nMove: {step['action']} (cost: {step['cost']})")
-                board_str = '\n'.join(' '.join(f"{n:2}" for n in step['board'][i:i+int(len(step['board'])**0.5)])
-                                     for i in range(0, len(step['board']), int(len(step['board'])**0.5)))
-                self.log(board_str)
+            self.log("\n=== Detailed Solution ===")
+            self.log(f"Final State")
+            self.report_state(final_node, 0)
+            # for step in self.solution_path:
+            #     if step['action']:
+            #         self.log(f"\nMove: {step['action']} (cost: {step['cost']})")
+            #     board_str = '\n'.join(' '.join(f"{n:2}" for n in step['board'][i:i+int(len(step['board'])**0.5)])
+            #                          for i in range(0, len(step['board']), int(len(step['board'])**0.5)))
+            #     self.log(board_str)
 
 
-def uniform_cost_search(initial_board: Board, reporter: Reporter) -> Optional[SearchNode]:
+def uniform_cost_search(initial_board: Board, reporter: Reporter):
     reporter.start_search()
+    reporter.report_state(SearchNode(initial_board, None, None, 0), 1)
     
-    frontier = PriorityQueue()
-    initial_node = SearchNode(initial_board, None, None, 0)
-    frontier.put((0, initial_node))
+    frontier = list[SearchNode]()
     
-    # Using string representation of board state for visited set
-    visited = set()
-    
-    while not frontier.empty():
-        _, current_node = frontier.get()
-        current_state = str(current_node.board.get_board())
+    heapq.heappush(frontier, SearchNode(board=initial_board, parent=None, action=None, cost=0))
+
+
+    def board_key(b: Board):
+        return ''.join(str(x) for x in b.get_board())
+
+    best_cost = { board_key(initial_board): 0 }
+
+    visited = list[Board]()
+
+    while frontier:
+        state: SearchNode
         
-        if current_state in visited:
+        # frontier.sort(key=lambda x: x.cost)  # Sort by cost to simulate priority queue behavior
+
+        state = heapq.heappop(frontier)  # tipo: SearchNode
+        
+        if state.board.is_soluted():
+            reporter.report_solution(state)
+            return state
+  
+        state_key = board_key(state.board)
+        if state.cost > best_cost.get(state_key, float("inf")):
             continue
-            
-        reporter.report_state(current_node, frontier.qsize())
-        visited.add(current_state)
         
-        # Check if current state is goal state (sorted except for -1 at the end)
-        current_board = current_node.board.get_board()
-        if current_board:
-            reporter.report_solution(current_node)
-            return current_node
-            
-        # Expand current node
-        for next_state in current_node.board.possible_next_states():
-            if str(next_state.get_board()) not in visited:
-                move = None
-                for direction in Direction:
-                    test_board = Board(current_node.board.game_size, current_node.board.get_board().copy())
-                    try:
-                        if direction == Direction.Left:
-                            test_board.move_left()
-                        elif direction == Direction.Right:
-                            test_board.move_right()
-                        elif direction == Direction.Up:
-                            test_board.move_up()
-                        elif direction == Direction.Down:
-                            test_board.move_down()
-                        
-                        if test_board.get_board() == next_state.get_board():
-                            move = direction
-                            break
-                    except ValueError:
-                        continue
-                
-                new_node = SearchNode(
-                    board=next_state,
-                    parent=current_node,
-                    action=move,
-                    cost=current_node.cost + 1
-                )
-                frontier.put((new_node.cost, new_node))
+        # visited.append(state.board)
+
+        for next_state, move in state.board.possible_next_states():
+            step_cost = 1 
+            new_cost = state.cost + step_cost
+            next_key = board_key(next_state)
+
+            if new_cost >= best_cost.get(next_key, float("inf")):
+                continue
+
+            best_cost[next_key] = new_cost
+            next_node = SearchNode(board=next_state, parent=state, action=move, cost=new_cost)
+            reporter.report_state(next_node, len(frontier))            
+            frontier.append(next_node)
+
+    # If we get here, no solution was found
+    return None
     
+import heapq
+import itertools
+from typing import Optional
+
+def uniform_cost_search_new(initial_board: Board, reporter: Reporter) -> Optional[SearchNode]:
+    reporter.start_search()
+    root = SearchNode(board=initial_board, parent=None, action=None, cost=0)
+    reporter.report_state(root, 1)
+
+    heap = list()
+    counter = itertools.count()
+    heapq.heappush(heap, (0, next(counter), root))
+
+    def board_key(b: Board):
+        return tuple(b.get_board())
+
+    best_cost = { board_key(initial_board): 0 }
+
+    while heap:
+        cost, _, node = heapq.heappop(heap)
+        key = board_key(node.board)
+
+        if cost > best_cost.get(key, float("inf")):
+            continue
+
+        reporter.report_state(node, len(heap))
+
+        # checa solução (suporta is_soluted ou is_solved)
+        if (hasattr(node.board, "is_soluted") and node.board.is_soluted()) or \
+           (hasattr(node.board, "is_solved") and node.board.is_solved()):
+            reporter.report_solution(node)
+            return node
+
+        # expande vizinhos
+        for next_board, move in node.board.possible_next_states():
+            step_cost = 1  # custo unitário por movimento (ajuste se necessário)
+            new_cost = node.cost + step_cost
+            next_key = board_key(next_board)
+
+            # se encontramos caminho melhor para next_key, atualizamos e empurramos no heap
+            if new_cost < best_cost.get(next_key, float("inf")):
+                best_cost[next_key] = new_cost
+                next_node = SearchNode(board=next_board, parent=node, action=move, cost=new_cost)
+                heapq.heappush(heap, (new_cost, next(counter), next_node))
+                # opcional: reporte do nó recém-gerado (comentável se gerar muito I/O)
+                reporter.report_state(next_node, len(heap))
+
+    # sem solução
     reporter.report_solution(None)
     return None
