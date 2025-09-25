@@ -132,7 +132,6 @@ def astar(
 
         max_frontier_size = max(max_frontier_size, len(open_heap))
 
-    # Essa linha só é alcançada se não houver solução, mas o tabuleiro fornecido deve ser solucionável
     end_time = time.perf_counter()
     _dump_frontier_visited(open_map, closed_map, save_path)
     return {
