@@ -1,4 +1,5 @@
 from __future__ import annotations
+import heapq
 from queue import PriorityQueue
 from typing import List, Optional, Set, Tuple
 from board import Board, Direction
@@ -62,14 +63,14 @@ class Reporter:
             self.solution_path = path
             self.solution_depth = len(path) - 1
 
-        # Report statistics
         stats = {
             'duration_seconds': duration,
             'visited_states': self.visited_states,
             'max_frontier_size': self.max_frontier_size,
             'solution_found': final_node is not None,
             'solution_depth': self.solution_depth if final_node else None,
-            'solution_cost': final_node.cost if final_node else None
+            'solution_cost': final_node.cost if final_node else None,
+            'solution_path': self.solution_path if final_node else None
         }
 
         self.log("\n=== Search Statistics ===")
@@ -102,8 +103,6 @@ def uniform_cost_search(initial_board: Board, reporter: Reporter):
 
     best_cost = { board_to_key(initial_board): 0 }
 
-    visited = list[Board]()
-
     while frontier:
         state: SearchNode
         
@@ -130,55 +129,4 @@ def uniform_cost_search(initial_board: Board, reporter: Reporter):
             reporter.report_state(next_node, len(frontier))            
             frontier.append(next_node)
 
-    return None
-    
-import heapq
-import itertools
-from typing import Optional
-
-def uniform_cost_search_new(initial_board: Board, reporter: Reporter) -> Optional[SearchNode]:
-    reporter.start_search()
-    root = SearchNode(board=initial_board, parent=None, action=None, cost=0)
-    reporter.report_state(root, 1)
-
-    heap = list()
-    counter = itertools.count()
-    heapq.heappush(heap, (0, next(counter), root))
-
-    def board_key(b: Board):
-        return tuple(b.get_board())
-
-    best_cost = { board_key(initial_board): 0 }
-
-    while heap:
-        cost, _, node = heapq.heappop(heap)
-        key = board_key(node.board)
-
-        if cost > best_cost.get(key, float("inf")):
-            continue
-
-        reporter.report_state(node, len(heap))
-
-        # checa solução (suporta is_soluted ou is_solved)
-        if (hasattr(node.board, "is_soluted") and node.board.is_soluted()) or \
-           (hasattr(node.board, "is_solved") and node.board.is_solved()):
-            reporter.report_solution(node)
-            return node
-
-        # expande vizinhos
-        for next_board, move in node.board.possible_next_states():
-            step_cost = 1  # custo unitário por movimento (ajuste se necessário)
-            new_cost = node.cost + step_cost
-            next_key = board_key(next_board)
-
-            # se encontramos caminho melhor para next_key, atualizamos e empurramos no heap
-            if new_cost < best_cost.get(next_key, float("inf")):
-                best_cost[next_key] = new_cost
-                next_node = SearchNode(board=next_board, parent=node, action=move, cost=new_cost)
-                heapq.heappush(heap, (new_cost, next(counter), next_node))
-                # opcional: reporte do nó recém-gerado (comentável se gerar muito I/O)
-                reporter.report_state(next_node, len(heap))
-
-    # sem solução
-    reporter.report_solution(None)
     return None
