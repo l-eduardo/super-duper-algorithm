@@ -88,13 +88,9 @@ class Reporter:
             self.log("\n=== Detailed Solution ===")
             self.log(f"Final State")
             self.report_state(final_node, 0)
-            # for step in self.solution_path:
-            #     if step['action']:
-            #         self.log(f"\nMove: {step['action']} (cost: {step['cost']})")
-            #     board_str = '\n'.join(' '.join(f"{n:2}" for n in step['board'][i:i+int(len(step['board'])**0.5)])
-            #                          for i in range(0, len(step['board']), int(len(step['board'])**0.5)))
-            #     self.log(board_str)
 
+def board_to_key(b: Board):
+        return ''.join(str(x) for x in b.get_board())
 
 def uniform_cost_search(initial_board: Board, reporter: Reporter):
     reporter.start_search()
@@ -102,37 +98,29 @@ def uniform_cost_search(initial_board: Board, reporter: Reporter):
     
     frontier = list[SearchNode]()
     
-    heapq.heappush(frontier, SearchNode(board=initial_board, parent=None, action=None, cost=0))
+    heapq.heappush(frontier, SearchNode(board=initial_board, parent=None, action=None, cost=0))    
 
-
-    def board_key(b: Board):
-        return ''.join(str(x) for x in b.get_board())
-
-    best_cost = { board_key(initial_board): 0 }
+    best_cost = { board_to_key(initial_board): 0 }
 
     visited = list[Board]()
 
     while frontier:
         state: SearchNode
         
-        # frontier.sort(key=lambda x: x.cost)  # Sort by cost to simulate priority queue behavior
-
         state = heapq.heappop(frontier)  # tipo: SearchNode
         
         if state.board.is_soluted():
             reporter.report_solution(state)
             return state
   
-        state_key = board_key(state.board)
+        state_key = board_to_key(state.board)
         if state.cost > best_cost.get(state_key, float("inf")):
             continue
         
-        # visited.append(state.board)
-
         for next_state, move in state.board.possible_next_states():
             step_cost = 1 
             new_cost = state.cost + step_cost
-            next_key = board_key(next_state)
+            next_key = board_to_key(next_state)
 
             if new_cost >= best_cost.get(next_key, float("inf")):
                 continue
@@ -142,7 +130,6 @@ def uniform_cost_search(initial_board: Board, reporter: Reporter):
             reporter.report_state(next_node, len(frontier))            
             frontier.append(next_node)
 
-    # If we get here, no solution was found
     return None
     
 import heapq
