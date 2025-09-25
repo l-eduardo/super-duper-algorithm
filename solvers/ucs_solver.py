@@ -27,6 +27,10 @@ class Reporter:
         self.solution_depth = 0
         self.solution_path = []
 
+        if self.file_path:
+            with open(self.file_path, 'w') as f:
+                f.write(f"")
+
     def start_search(self):
         self.start_time = datetime.now()
 
@@ -73,21 +77,21 @@ class Reporter:
             'solution_path': self.solution_path if final_node else None
         }
 
-        self.log("\n=== Search Statistics ===")
-        self.log(f"Duration: {duration:.2f} seconds")
-        self.log(f"States visited: {stats['visited_states']}")
-        self.log(f"Maximum frontier size: {stats['max_frontier_size']}")
-        self.log(f"Solution found: {stats['solution_found']}")
+        print("\n=== Search Statistics ===")
+        print(f"Duration: {duration:.2f} seconds")
+        print(f"States visited: {stats['visited_states']}")
+        print(f"Maximum frontier size: {stats['max_frontier_size']}")
+        print(f"Solution found: {stats['solution_found']}")
         if final_node:
-            self.log(f"Solution depth: {stats['solution_depth']}")
-            self.log(f"Solution cost: {stats['solution_cost']}")
-            self.log("\n=== Solution Steps ===")
+            print(f"Solution depth: {stats['solution_depth']}")
+            print(f"Solution cost: {stats['solution_cost']}")
+            print("\n=== Solution Steps ===")
             moves = [step['action'] for step in self.solution_path if step['action']]
-            self.log("Sequence of moves to solve the puzzle:")
-            self.log(" -> ".join(moves if moves else ["Already solved!"]))
+            print("Sequence of moves to solve the puzzle:")
+            print(" -> ".join(moves if moves else ["Already solved!"]))
             
-            self.log("\n=== Detailed Solution ===")
-            self.log(f"Final State")
+            print("\n=== Detailed Solution ===")
+            print(f"Final State")
             self.report_state(final_node, 0)
 
 def board_to_key(b: Board):
