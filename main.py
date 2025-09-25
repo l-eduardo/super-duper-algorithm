@@ -4,6 +4,24 @@ from solvers.inadmissible_heuristic import inadmissible_heuristic
 from solvers.admissible_heuristic_precise import admissible_heuristic_precise
 from solvers.ucs_solver import Reporter, uniform_cost_search
 
+EASY_1 = [1,2,3,
+          4,-1,6,
+          7,5,8]
+MEDIUM_1 = [1,6,7,
+          5,-1,3,
+          8,2,4]
+MEDIUM_2 = [7,2,4,
+          5,-1,6,
+          8,3,1]
+HARD_1 = [8,6,7,
+          2,5,4,
+          3,-1,1]
+HARD_2 = [1,2,3,
+          4,5,6,
+          8,-1,7]
+HARD_3 = [6,4,7,
+          8,5,-1,
+          3,2,1]
 
 def menu():
     print("=== 8-Puzzle Solver ===")
@@ -18,9 +36,7 @@ def menu():
         print("Opção inválida!")
         return
 
-    tabuleiro = [8, 7, 6,
-               5, -1, 4,
-               3, 2, 1]
+    tabuleiro = HARD_3
 
     b = Board(3, tabuleiro)
 
