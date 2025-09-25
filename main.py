@@ -1,6 +1,7 @@
 from board import Board
 from solvers.admissible_heuristic import admissible_heuristic
 from solvers.inadmissible_heuristic import inadmissible_heuristic
+from solvers.admissible_heuristic_precise import admissible_heuristic_precise
 
 
 def menu():
@@ -16,9 +17,10 @@ def menu():
         print("Opção inválida!")
         return
 
-    tabuleiro = [1, -1, 3,
-               4, 2, 5,
-               7, 8, 6]
+    tabuleiro = [8, 7, 6,
+               5, -1, 4,
+               3, 2, 1]
+
     b = Board(3, tabuleiro)
 
     # if escolha == "1":
@@ -30,9 +32,9 @@ def menu():
     elif escolha == "3":
         result = admissible_heuristic(b)
         print("Resultado Algoritmo 3 (Admissível simples):", result["result"])
-    # elif escolha == "4":
-    #     result = admissible_precise(b)
-    #     print("Resultado Algoritmo 4 (Admissível precisa):", result["result"])
+    elif escolha == "4":
+        result = admissible_heuristic_precise(b)
+        print("Resultado Algoritmo 4 (Admissível precisa):", result["result"])
 
     print("Arquivos gerados:")
     print("Fronteira:", result["frontier_file"])

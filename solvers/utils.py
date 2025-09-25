@@ -36,6 +36,19 @@ def reconstruct_path(node: Node) -> List[Direction]:
     return path[::-1]
 
 
+def manhattan_distance(board: Board) -> int:
+    arr = board.get_board()
+    size = board.game_size
+    dist = 0
+    for idx, val in enumerate(arr):
+        if val == -1:
+            continue
+        target = val - 1
+        cur_row, cur_col = divmod(idx, int(size))
+        tar_row, tar_col = divmod(target, int(size))
+        dist += abs(cur_row - tar_row) + abs(cur_col - tar_col)
+    return dist
+
 # ---------------- Algoritmo A* ----------------
 def astar(
     start_board: Board,
@@ -57,41 +70,35 @@ def astar(
 
     max_frontier_size = 1
     nodes_visited = 0
-    iterations = 0
 
     while open_heap:
-        iterations += 1
-
         item = heapq.heappop(open_heap)
         cur_node = item.node
         cur_key = item.state_key
 
-        # lazy skip se já em closed
         if cur_key in closed_map:
             continue
 
-        # mover para closed
         open_map.pop(cur_key, None)
         closed_map[cur_key] = cur_node
         nodes_visited += 1
 
-        # objetivo
         if cur_node.board.is_soluted():
             end_time = time.perf_counter()
             path = reconstruct_path(cur_node)
-            result = {
-                "path": [d.name for d in path],
-                "path_length": len(path),
-                "nodes_visited": nodes_visited,
-                "time_seconds": end_time - start_time,
-                "max_frontier_size": max_frontier_size,
-                "status": "solved"
-            }
-            # salva frontier/visited (no momento da terminação)
             _dump_frontier_visited(open_map, closed_map, save_path)
-            return {"result": result, "frontier_file": save_path}
+            return {
+                "result": {
+                    "path": [d.name for d in path],
+                    "path_length": len(path),
+                    "nodes_visited": nodes_visited,
+                    "time_seconds": end_time - start_time,
+                    "max_frontier_size": max_frontier_size,
+                    "status": "solved"
+                },
+                "frontier_file": save_path
+            }
 
-        # expandir
         for direction in cur_node.board.possible_moves():
             new_board = Board(cur_node.board.game_size, cur_node.board.get_board().copy())
             if direction == Direction.Left:
@@ -108,10 +115,8 @@ def astar(
             child_key = board_to_key(new_board)
             tentative_g = cur_node.g + 1
 
-            if child_key in closed_map:
-                existing = closed_map[child_key]
-                if tentative_g >= existing.g:
-                    continue
+            if child_key in closed_map and tentative_g >= closed_map[child_key].g:
+                continue
 
             child_h = heuristic_fn(new_board)
             child_f = tentative_g + child_h
@@ -127,18 +132,20 @@ def astar(
 
         max_frontier_size = max(max_frontier_size, len(open_heap))
 
-    # terminou sem solução
+    # Essa linha só é alcançada se não houver solução, mas o tabuleiro fornecido deve ser solucionável
     end_time = time.perf_counter()
-    result = {
-        "path": None,
-        "path_length": None,
-        "nodes_visited": nodes_visited,
-        "time_seconds": end_time - start_time,
-        "max_frontier_size": max_frontier_size,
-        "status": "no_solution_or_max_iterations_reached"
-    }
     _dump_frontier_visited(open_map, closed_map, save_path)
-    return {"result": result, "frontier_file": save_path}
+    return {
+        "result": {
+            "path": None,
+            "path_length": None,
+            "nodes_visited": nodes_visited,
+            "time_seconds": end_time - start_time,
+            "max_frontier_size": max_frontier_size,
+            "status": "unsolvable_or_error"
+        },
+        "frontier_file": save_path
+    }
 
 def _dump_frontier_visited(open_map: Dict[Tuple[int, ...], Node],
                            closed_map: Dict[Tuple[int, ...], Node],
